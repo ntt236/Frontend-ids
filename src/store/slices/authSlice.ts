@@ -25,11 +25,12 @@ export const loginThunk = createAsyncThunk(
   async (credentials: { username: string; password: string }, { rejectWithValue }) => {
     try {
       const res = await authService.login(credentials);
-      // Temporarily set token in Redux so me() can use it via interceptor
-      // Actually me() in mock mode ignores headers, but in real mode interceptor is attached to apiClient.
-      // We will just pass it to Redux after.
-      const meRes = await authService.me();
-      return { token: res.data.token, user: meRes.data };
+      const token = res.data.token;
+      
+      // Fetch user info using the new token directly (avoiding race condition)
+      const meRes = await authService.me(token);
+      
+      return { token, user: meRes.data };
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(e.response?.data?.message || "Login failed");

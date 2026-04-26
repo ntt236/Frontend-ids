@@ -78,12 +78,13 @@ export const authService = {
     if (USE_MOCK) return { data: { message: "Mock user registered" } };
     return apiClient.post("/api/auth/register", data);
   },
-  me: async () => {
+  me: async (token?: string) => {
     if (USE_MOCK) {
       if (!localStorage.getItem("mockToken")) return Promise.reject(new Error("Not authenticated"));
       return { data: mockUser };
     }
-    return apiClient.get<{ username: string; role: string }>("/api/auth/me");
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    return apiClient.get<{ username: string; role: string }>("/api/auth/me", config);
   },
   refresh: async () => {
     if (USE_MOCK) return { data: { token: "mock_jwt_token_456" } };
