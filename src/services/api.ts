@@ -1,11 +1,11 @@
 import axios from "axios";
-import { store } from "@/store/store";
+// import { store } from "@/store/store"; // Removed to fix circular dependency
 import { refreshTokenThunk, clearAuth } from "@/store/slices/authSlice";
 import { API_URL } from "@/lib/constants";
 import { mockAlerts, mockDashboardStats, mockPackets, mockReports, mockUser } from "./mockData";
 
 // --- MOCK MODE TOGGLE ---
-const USE_MOCK = false;
+export const USE_MOCK = true;
 // ------------------------
 
 export const apiClient = axios.create({
@@ -14,8 +14,15 @@ export const apiClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let injectedStore: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const injectStore = (_store: any) => {
+  injectedStore = _store;
+};
+
 apiClient.interceptors.request.use((config) => {
-  const token = store.getState().auth.accessToken;
+  const token = injectedStore?.getState().auth.accessToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -45,7 +52,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
       try {
-        const result = await store.dispatch(refreshTokenThunk());
+        const result = await injectedStore.dispatch(refreshTokenThunk());
         if (refreshTokenThunk.fulfilled.match(result)) {
           const newToken = result.payload.token;
           processQueue(null, newToken);
@@ -53,7 +60,7 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         } else {
           processQueue(error);
-          store.dispatch(clearAuth());
+          injectedStore.dispatch(clearAuth());
           window.location.href = "/login";
           return Promise.reject(error);
         }
@@ -101,8 +108,30 @@ export const authService = {
 
 export const alertService = {
   getAll: async (params: Record<string, string | number>) => {
-    if (USE_MOCK) return { data: { content: mockAlerts, totalElements: 25, totalPages: 1, currentPage: 0, pageSize: 10 } };
+    if (USE_MOCK) {
+      let filtered = [...mockAlerts];
+      if (params.status && params.status !== "ALL") {
+        filtered = filtered.filter(a => a.status === params.status);
+      }
+      if (params.severity && params.severity !== "ALL") {
+        filtered = filtered.filter(a => a.severity === params.severity);
+      }
+      if (params.alertType && params.alertType !== "ALL") {
+        filtered = filtered.filter(a => a.alertType === params.alertType);
+      }
+      return { data: { content: filtered, totalElements: filtered.length, totalPages: 1, currentPage: 0, pageSize: 10 } };
+    }
     return apiClient.get("/api/alerts", { params });
+  },
+  getById: async (id: number) => {
+    if (USE_MOCK) {
+      const alert = mockAlerts.find(a => a.id === id);
+      if (!alert) return Promise.reject(new Error("Alert not found"));
+      // Mock: attach related packet info
+      const packet = mockPackets.find(p => p.id === alert.packetId);
+      return { data: { ...alert, packet: packet || null } };
+    }
+    return apiClient.get(`/api/alerts/${id}`);
   },
   updateStatus: async (id: number, status: string) => {
     if (USE_MOCK) {
@@ -119,7 +148,13 @@ export const alertService = {
 
 export const packetService = {
   getAll: async (params: Record<string, string | number>) => {
-    if (USE_MOCK) return { data: { content: mockPackets, totalElements: 25, totalPages: 1, currentPage: 0, pageSize: 10 } };
+    if (USE_MOCK) {
+      let filtered = [...mockPackets];
+      if (params.label && params.label !== "ALL") {
+        filtered = filtered.filter(p => p.label === params.label);
+      }
+      return { data: { content: filtered, totalElements: filtered.length, totalPages: 1, currentPage: 0, pageSize: 10 } };
+    }
     return apiClient.get("/api/packets", { params });
   },
   delete: async (id: number) => {

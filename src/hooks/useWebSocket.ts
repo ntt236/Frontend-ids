@@ -9,16 +9,59 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { WS_URL } from "@/lib/constants";
 import { store } from "@/store/store";
+import { USE_MOCK } from "@/services/api";
 
 export function useWebSocket(enabled: boolean = true) {
   const dispatch = useAppDispatch();
   const clientRef = useRef<Client | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
 
+    if (USE_MOCK) {
+      dispatch(setConnecting());
+      const connectTimeout = setTimeout(() => {
+        dispatch(setConnected());
+
+        intervalRef.current = setInterval(() => {
+          const types = ["DoS", "Probe", "R2L", "U2R"];
+          const severities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
+          
+          const typeIdx = Math.floor(Math.random() * types.length);
+          const sevIdx = Math.random() > 0.8 ? 0 : Math.floor(Math.random() * 3) + 1;
+          
+          const newAlert: WsAlert = {
+            id: Date.now(),
+            packetId: Math.floor(Math.random() * 10000),
+            alertType: types[typeIdx],
+            severity: severities[sevIdx],
+            message: `Mock incoming threat detected from external IP. Pattern: ${types[typeIdx]}`,
+            status: "OPEN",
+            createdAt: new Date().toISOString()
+          };
+
+          dispatch(addRealtimeAlert(newAlert as never));
+          dispatch(setLastMessage(new Date().toISOString()));
+
+          const toastFn = newAlert.severity === "CRITICAL" ? toast.error : toast.warning;
+          toastFn(`[${newAlert.severity}] ${newAlert.alertType}`, {
+            description: newAlert.message,
+            duration: 6000,
+          });
+
+        }, Math.floor(Math.random() * 5000) + 3000);
+      }, 1000);
+
+      return () => {
+        clearTimeout(connectTimeout);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        dispatch(setDisconnected());
+      };
+    }
+
+    // --- REAL STOMP LOGIC ---
     const token = store.getState().auth.accessToken;
-    
     dispatch(setConnecting());
 
     const client = new Client({
@@ -27,7 +70,6 @@ export function useWebSocket(enabled: boolean = true) {
       connectHeaders: {
         Authorization: token ? `Bearer ${token}` : "",
       },
-      // debug: (str) => console.log(str), // Uncomment to debug STOMP traffic
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,

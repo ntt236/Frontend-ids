@@ -210,7 +210,7 @@ export default function AlertsPage() {
                                 <Eye className="mr-2 h-4 w-4" /> View Details
                               </Link>
                             </DropdownMenuItem>
-                            {alert.status === "OPEN" && (
+                            {isAdmin && alert.status === "OPEN" && (
                               <>
                                 <DropdownMenuItem onClick={() => onUpdateStatus(alert.id, "RESOLVED")}>
                                   <ShieldCheck className="mr-2 h-4 w-4 text-emerald-500" /> Mark Resolved

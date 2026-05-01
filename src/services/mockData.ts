@@ -2,7 +2,7 @@ import { AlertResponse, DashboardStatsResponse, PacketResponse, ReportResponse, 
 
 export const mockUser: User = {
   username: "admin_mock",
-  role: "ADMIN",
+  role: "USER",
 };
 
 export const mockDashboardStats: DashboardStatsResponse = {
@@ -40,7 +40,7 @@ export const mockAlerts: AlertResponse[] = Array.from({ length: 25 }).map((_, i)
   const statuses = ["OPEN", "RESOLVED", "IGNORED"];
   const d = new Date();
   d.setMinutes(d.getMinutes() - i * 15);
-  
+
   return {
     id: 1000 - i,
     packetId: 5000 - i,
@@ -59,7 +59,7 @@ export const mockPackets: PacketResponse[] = Array.from({ length: 25 }).map((_, 
   const isAttack = i % 3 === 0;
   const d = new Date();
   d.setSeconds(d.getSeconds() - i * 5);
-  
+
   return {
     id: 5000 - i,
     sourceIp: `192.168.1.${10 + i}`,

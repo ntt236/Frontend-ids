@@ -5,15 +5,20 @@ import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { useAppSelector, useAppDispatch } from "@/hooks/useAppStore";
-import { selectIsAuthenticated, fetchMeThunk } from "@/store/slices/authSlice";
+import { selectIsAuthenticated, selectIsAdmin, fetchMeThunk } from "@/store/slices/authSlice";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+// Routes that require ADMIN role
+const ADMIN_ONLY_ROUTES = ["/packets", "/reports", "/settings"];
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const isAdmin = useAppSelector(selectIsAdmin);
   const [isChecking, setIsChecking] = useState(true);
 
   // Initialize WebSocket connection when authenticated
@@ -38,6 +43,17 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
     checkAuth();
   }, [isAuthenticated, dispatch, router, pathname]);
+
+  // Route Guard: block non-admin users from admin-only pages
+  useEffect(() => {
+    if (!isChecking && isAuthenticated && !isAdmin) {
+      const isAdminRoute = ADMIN_ONLY_ROUTES.some(route => pathname.startsWith(route));
+      if (isAdminRoute) {
+        toast.error("Bạn không có quyền truy cập trang này");
+        router.replace("/dashboard");
+      }
+    }
+  }, [isChecking, isAuthenticated, isAdmin, pathname, router]);
 
   if (isChecking) {
     return (

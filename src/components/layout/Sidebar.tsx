@@ -15,17 +15,21 @@ const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Live Monitor", href: "/live-monitor", icon: Activity },
   { name: "Alerts", href: "/alerts", icon: AlertTriangle, badge: "alerts" },
-  { name: "Packets", href: "/packets", icon: Package },
-  { name: "Reports", href: "/reports", icon: FileText },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Packets", href: "/packets", icon: Package, adminOnly: true },
+  { name: "Reports", href: "/reports", icon: FileText, adminOnly: true },
+  { name: "Settings", href: "/settings", icon: Settings, adminOnly: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
+  const isAdmin = useAppSelector(selectIsAdmin);
   const unreadAlerts = useAppSelector(selectUnreadCount);
   const isWsConnected = useAppSelector(selectIsWsConnected);
   const wsStatus = useAppSelector(selectWsStatus);
+
+  // Filter navigation items based on user role
+  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
   const handleLogout = () => {
     dispatch(logoutThunk());
@@ -42,7 +46,7 @@ export function Sidebar() {
 
       <div className="flex-1 overflow-auto py-4">
         <nav className="grid items-start px-4 text-sm font-medium gap-1">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
             return (
