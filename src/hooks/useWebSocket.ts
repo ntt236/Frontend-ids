@@ -10,6 +10,7 @@ import SockJS from "sockjs-client";
 import { WS_URL } from "@/lib/constants";
 import { store } from "@/store/store";
 import { USE_MOCK } from "@/services/api";
+import { getAccessTokenCookie } from "@/lib/authCookies";
 
 export function useWebSocket(enabled: boolean = true) {
   const dispatch = useAppDispatch();
@@ -61,7 +62,7 @@ export function useWebSocket(enabled: boolean = true) {
     }
 
     // --- REAL STOMP LOGIC ---
-    const token = store.getState().auth.accessToken;
+    const token = store.getState().auth.accessToken || getAccessTokenCookie();
     dispatch(setConnecting());
 
     const client = new Client({

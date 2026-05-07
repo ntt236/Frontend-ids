@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { User } from "@/types";
 import { apiClient } from "@/services/api";
+import { setAccessTokenCookie, clearAccessTokenCookie } from "@/lib/authCookies";
 
 interface AuthState {
   user: User | null;
@@ -26,10 +27,12 @@ export const loginThunk = createAsyncThunk(
     try {
       const res = await authService.login(credentials);
       const token = res.data.token;
-      
+
+      setAccessTokenCookie(token);
+
       // Fetch user info using the new token directly (avoiding race condition)
       const meRes = await authService.me(token);
-      
+
       return { token, user: meRes.data };
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
@@ -43,8 +46,10 @@ export const refreshTokenThunk = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await authService.refresh();
+      setAccessTokenCookie(res.data.token);
       return { token: res.data.token };
     } catch (err: unknown) {
+      clearAccessTokenCookie();
       const e = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(e.response?.data?.message || "Refresh failed");
     }
@@ -56,6 +61,8 @@ export const logoutThunk = createAsyncThunk("auth/logout", async (_, { rejectWit
     await authService.logout();
   } catch {
     // ignore errors on logout
+  } finally {
+    clearAccessTokenCookie();
   }
 });
 
