@@ -3,9 +3,10 @@ import axios from "axios";
 import { refreshTokenThunk, clearAuth } from "@/store/slices/authSlice";
 import { API_URL } from "@/lib/constants";
 import { mockAlerts, mockDashboardStats, mockPackets, mockReports, mockUser } from "./mockData";
+import { clearAccessTokenCookie, getAccessTokenCookie } from "@/lib/authCookies";
 
 // --- MOCK MODE TOGGLE ---
-export const USE_MOCK = true;
+export const USE_MOCK = false;
 // ------------------------
 
 export const apiClient = axios.create({
@@ -22,7 +23,7 @@ export const injectStore = (_store: any) => {
 };
 
 apiClient.interceptors.request.use((config) => {
-  const token = injectedStore?.getState().auth.accessToken;
+  const token = injectedStore?.getState().auth.accessToken || getAccessTokenCookie();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -60,6 +61,7 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         } else {
           processQueue(error);
+          clearAccessTokenCookie();
           injectedStore.dispatch(clearAuth());
           window.location.href = "/login";
           return Promise.reject(error);
