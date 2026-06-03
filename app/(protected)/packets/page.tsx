@@ -153,8 +153,8 @@ export default function PacketsPage() {
                   packets.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell className="font-mono text-xs">{p.id}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.sourceIp}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.destIp}</TableCell>
+                      <TableCell className="font-mono text-xs">{p.srcIp}</TableCell>
+                      <TableCell className="font-mono text-xs">{p.dstIp}</TableCell>
                       <TableCell>{p.protocol}</TableCell>
                       <TableCell>{formatBytes(p.size)}</TableCell>
                       <TableCell>

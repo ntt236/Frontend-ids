@@ -24,8 +24,8 @@ export interface RegisterRequest {
 // ─── Packets ────────────────────────────────────────────────────
 export interface PacketResponse {
   id: number;
-  sourceIp: string;
-  destIp: string;
+  srcIp: string;
+  dstIp: string;
   protocol: string;
   size: number;
   label: string;
@@ -36,7 +36,7 @@ export interface PacketResponse {
 
 export interface PacketRequest {
   sourceIp: string;
-  destIp: string;
+  dstIp: string;
   protocol: string;
   size: number;
   label: string;
