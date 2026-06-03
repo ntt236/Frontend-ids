@@ -25,9 +25,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ATTACK_TYPE_CONFIG } from "@/lib/constants";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { formatDateTime, formatBytes, formatConfidence } from "@/lib/formatters";
-import { MoreHorizontal, Trash2, Eye, Plus } from "lucide-react";
+import { MoreHorizontal, Trash2, Eye, Plus, X } from "lucide-react";
 import { useAppSelector } from "@/hooks/useAppStore";
 import { selectIsAdmin } from "@/store/slices/authSlice";
 import { packetService } from "@/services/api";
@@ -44,6 +45,21 @@ export default function PacketsPage() {
   const [page, setPage] = useState(0);
   const [labelFilter, setLabelFilter] = useState("ALL");
   const [isLoading, setIsLoading] = useState(true);
+  const [isInjectModalOpen, setIsInjectModalOpen] = useState(false);
+  const [isInjecting, setIsInjecting] = useState(false);
+
+  // Form state for Inject Packet
+  const [injectData, setInjectData] = useState({
+    srcIp: "192.168.1.100",
+    dstIp: "10.0.0.5",
+    srcPort: 443,
+    dstPort: 80,
+    protocol: "TCP",
+    duration: 0.0,
+    land: 0,
+    wrongFragment: 0,
+    urgent: 0,
+  });
 
   const fetchPacketsData = async () => {
     setIsLoading(true);
@@ -78,6 +94,22 @@ export default function PacketsPage() {
     }
   };
 
+  const handleInject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsInjecting(true);
+    try {
+      const res = await packetService.analyze(injectData);
+      const result = res.data as PacketResponse;
+      toast.success(`Packet injected! Result: ${result.label.toUpperCase()}`);
+      setIsInjectModalOpen(false);
+      fetchPacketsData();
+    } catch (error) {
+      toast.error("Failed to inject packet");
+    } finally {
+      setIsInjecting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -87,7 +119,7 @@ export default function PacketsPage() {
             Total Packets: <span className="font-medium text-foreground">{totalElements}</span>
           </div>
           {isAdmin && (
-            <Button>
+            <Button onClick={() => setIsInjectModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Inject Packet
             </Button>
           )}
@@ -230,6 +262,103 @@ export default function PacketsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Custom Modal for Inject Packet */}
+      {isInjectModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-lg shadow-lg relative">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-4 top-4" 
+              onClick={() => setIsInjectModalOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <CardHeader>
+              <CardTitle>Inject Packet</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleInject} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="srcIp">Source IP</Label>
+                    <Input 
+                      id="srcIp" 
+                      value={injectData.srcIp} 
+                      onChange={(e) => setInjectData({...injectData, srcIp: e.target.value})} 
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dstIp">Destination IP</Label>
+                    <Input 
+                      id="dstIp" 
+                      value={injectData.dstIp} 
+                      onChange={(e) => setInjectData({...injectData, dstIp: e.target.value})} 
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="srcPort">Source Port</Label>
+                    <Input 
+                      id="srcPort" 
+                      type="number"
+                      value={injectData.srcPort} 
+                      onChange={(e) => setInjectData({...injectData, srcPort: Number(e.target.value)})} 
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dstPort">Destination Port</Label>
+                    <Input 
+                      id="dstPort" 
+                      type="number"
+                      value={injectData.dstPort} 
+                      onChange={(e) => setInjectData({...injectData, dstPort: Number(e.target.value)})} 
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="protocol">Protocol</Label>
+                    <Select 
+                      value={injectData.protocol} 
+                      onValueChange={(v) => setInjectData({...injectData, protocol: v})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Protocol" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="TCP">TCP</SelectItem>
+                        <SelectItem value="UDP">UDP</SelectItem>
+                        <SelectItem value="ICMP">ICMP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Duration (s)</Label>
+                    <Input 
+                      id="duration" 
+                      type="number"
+                      step="0.1"
+                      value={injectData.duration} 
+                      onChange={(e) => setInjectData({...injectData, duration: Number(e.target.value)})} 
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end pt-4">
+                  <Button type="button" variant="outline" className="mr-2" onClick={() => setIsInjectModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isInjecting}>
+                    {isInjecting ? "Injecting..." : "Analyze Packet"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

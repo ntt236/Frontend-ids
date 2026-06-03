@@ -73,6 +73,16 @@ export default function ReportsPage() {
     }
   };
 
+  const handleDownload = (report: ReportResponse) => {
+    const dataStr = JSON.stringify(report, null, 2);
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+    const exportFileDefaultName = `report-${report.title.replace(/\s+/g, "_").toLowerCase()}-${report.fromDate}.json`;
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
+    linkElement.click();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -172,7 +182,12 @@ export default function ReportsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" title="Download API Data (JSON)">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              title="Download API Data (JSON)"
+                              onClick={() => handleDownload(report)}
+                            >
                               <Download className="h-4 w-4 text-emerald-500" />
                             </Button>
                             {isAdmin && (

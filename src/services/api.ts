@@ -159,6 +159,12 @@ export const packetService = {
     }
     return apiClient.get("/api/packets", { params });
   },
+  analyze: async (data: unknown) => {
+    if (USE_MOCK) {
+      return { data: { id: Date.now(), label: "normal", confidence: 0.99, ...data as object } };
+    }
+    return apiClient.post("/api/packets", data);
+  },
   delete: async (id: number) => {
     if (USE_MOCK) return { data: {} };
     return apiClient.delete(`/api/packets/${id}`);
