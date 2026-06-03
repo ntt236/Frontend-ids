@@ -50,15 +50,16 @@ export default function PacketsPage() {
 
   // Form state for Inject Packet
   const [injectData, setInjectData] = useState({
-    srcIp: "192.168.1.100",
-    dstIp: "10.0.0.5",
-    srcPort: 443,
-    dstPort: 80,
-    protocol: "TCP",
+    srcIp: "192.168.1.42",
+    dstIp: "10.0.0.33",
+    srcPort: 33456,
+    dstPort: 0,
+    protocol: "ICMP",
     duration: 0.0,
     land: 0,
     wrongFragment: 0,
     urgent: 0,
+    size: 84,
   });
 
   const fetchPacketsData = async () => {
@@ -185,8 +186,8 @@ export default function PacketsPage() {
                   packets.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell className="font-mono text-xs">{p.id}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.sourceIp}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.destIp}</TableCell>
+                      <TableCell className="font-mono text-xs">{p.srcIp}</TableCell>
+                      <TableCell className="font-mono text-xs">{p.dstIp}</TableCell>
                       <TableCell>{p.protocol}</TableCell>
                       <TableCell>{formatBytes(p.size)}</TableCell>
                       <TableCell>
@@ -343,6 +344,15 @@ export default function PacketsPage() {
                       step="0.1"
                       value={injectData.duration} 
                       onChange={(e) => setInjectData({...injectData, duration: Number(e.target.value)})} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="size">Size (bytes)</Label>
+                    <Input 
+                      id="size" 
+                      type="number"
+                      value={injectData.size} 
+                      onChange={(e) => setInjectData({...injectData, size: Number(e.target.value)})} 
                     />
                   </div>
                 </div>

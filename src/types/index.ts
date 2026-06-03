@@ -24,24 +24,35 @@ export interface RegisterRequest {
 // ─── Packets ────────────────────────────────────────────────────
 export interface PacketResponse {
   id: number;
-  sourceIp: string;
-  destIp: string;
+  srcIp: string;
+  dstIp: string;
+  srcPort: number;
+  dstPort: number;
   protocol: string;
   size: number;
+  duration: number;
+  land: number;
+  wrongFragment: number;
+  urgent: number;
   label: string;
   attackType: string;
   confidence: number;
   capturedAt: string;
+  isThreat?: boolean;
+  message?: string;
 }
 
 export interface PacketRequest {
-  sourceIp: string;
-  destIp: string;
+  srcIp: string;
+  dstIp: string;
+  srcPort: number;
+  dstPort: number;
   protocol: string;
   size: number;
-  label: string;
-  attackType: string;
-  confidence: number;
+  duration: number;
+  land: number;
+  wrongFragment: number;
+  urgent: number;
 }
 
 // ─── Alerts ─────────────────────────────────────────────────────
