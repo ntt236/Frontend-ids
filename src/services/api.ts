@@ -161,12 +161,42 @@ export const packetService = {
   },
   analyze: async (data: unknown) => {
     if (USE_MOCK) {
-      return { data: { id: Date.now(), label: "normal", confidence: 0.99, ...data as object } };
+      const input = data as Record<string, unknown>;
+      const isAttack = Math.random() > 0.5;
+      const attackTypes = ["DoS", "Probe", "R2L", "U2R"];
+      const newPacket = {
+        id: Date.now(),
+        srcIp: (input.srcIp as string) || "0.0.0.0",
+        dstIp: (input.dstIp as string) || "0.0.0.0",
+        srcPort: (input.srcPort as number) || 0,
+        dstPort: (input.dstPort as number) || 0,
+        protocol: (input.protocol as string) || "TCP",
+        size: (input.size as number) || 0,
+        duration: (input.duration as number) || 0,
+        land: (input.land as number) || 0,
+        wrongFragment: (input.wrongFragment as number) || 0,
+        urgent: (input.urgent as number) || 0,
+        label: isAttack ? "attack" : "normal",
+        attackType: isAttack ? attackTypes[Math.floor(Math.random() * attackTypes.length)] : "",
+        confidence: isAttack ? 0.7 + Math.random() * 0.25 : 0.9 + Math.random() * 0.09,
+        capturedAt: new Date().toISOString(),
+        isThreat: isAttack,
+        message: "",
+      };
+      newPacket.message = isAttack
+        ? `${newPacket.attackType} attack detected with ${Math.round(newPacket.confidence * 100)}% confidence`
+        : "Normal traffic detected";
+      mockPackets.unshift(newPacket);
+      return { data: newPacket };
     }
     return apiClient.post("/api/packets", data);
   },
   delete: async (id: number) => {
-    if (USE_MOCK) return { data: {} };
+    if (USE_MOCK) {
+      const idx = mockPackets.findIndex(p => p.id === id);
+      if (idx !== -1) mockPackets.splice(idx, 1);
+      return { data: {} };
+    }
     return apiClient.delete(`/api/packets/${id}`);
   },
 };
@@ -183,15 +213,34 @@ export const dashboardService = {
 
 export const reportService = {
   getAll: async (page = 0, size = 10) => {
-    if (USE_MOCK) return { data: { content: mockReports, totalElements: 2, totalPages: 1, currentPage: 0, pageSize: 10 } };
+    if (USE_MOCK) return { data: { content: [...mockReports], totalElements: mockReports.length, totalPages: 1, currentPage: 0, pageSize: 10 } };
     return apiClient.get("/api/reports", { params: { page, size } });
   },
   create: async (data: unknown) => {
-    if (USE_MOCK) return { data: {} };
+    if (USE_MOCK) {
+      const input = data as Record<string, string>;
+      const newReport = {
+        id: Date.now(),
+        title: input.title || "Untitled Report",
+        generatedBy: "admin_mock",
+        fromDate: input.fromDate || "",
+        toDate: input.toDate || "",
+        totalPackets: mockPackets.length,
+        totalAlerts: mockAlerts.length,
+        alertsByType: { "DoS": 5, "Probe": 3 },
+        generatedAt: new Date().toISOString(),
+      };
+      mockReports.unshift(newReport);
+      return { data: newReport };
+    }
     return apiClient.post("/api/reports", data);
   },
   delete: async (id: number) => {
-    if (USE_MOCK) return { data: {} };
+    if (USE_MOCK) {
+      const idx = mockReports.findIndex(r => r.id === id);
+      if (idx !== -1) mockReports.splice(idx, 1);
+      return { data: {} };
+    }
     return apiClient.delete(`/api/reports/${id}`);
   },
 };

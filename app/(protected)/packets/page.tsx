@@ -27,7 +27,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatDateTime, formatBytes, formatConfidence } from "@/lib/formatters";
+import { formatDateTime, formatConfidence } from "@/lib/formatters";
 import { MoreHorizontal, Trash2, Eye, Plus, X } from "lucide-react";
 import { useAppSelector } from "@/hooks/useAppStore";
 import { selectIsAdmin } from "@/store/slices/authSlice";
@@ -59,7 +59,6 @@ export default function PacketsPage() {
     land: 0,
     wrongFragment: 0,
     urgent: 0,
-    size: 84,
   });
 
   const fetchPacketsData = async () => {
@@ -154,9 +153,9 @@ export default function PacketsPage() {
                   <TableHead>Source IP</TableHead>
                   <TableHead>Dest IP</TableHead>
                   <TableHead>Proto</TableHead>
-                  <TableHead>Size</TableHead>
                   <TableHead>Prediction</TableHead>
                   <TableHead>Confidence</TableHead>
+                  <TableHead>Message</TableHead>
                   <TableHead>Captured At</TableHead>
                   <TableHead className="w-[70px]"></TableHead>
                 </TableRow>
@@ -169,9 +168,9 @@ export default function PacketsPage() {
                       <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                      <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
                     </TableRow>
@@ -189,7 +188,6 @@ export default function PacketsPage() {
                       <TableCell className="font-mono text-xs">{p.srcIp}</TableCell>
                       <TableCell className="font-mono text-xs">{p.dstIp}</TableCell>
                       <TableCell>{p.protocol}</TableCell>
-                      <TableCell>{formatBytes(p.size)}</TableCell>
                       <TableCell>
                         <Badge 
                           variant={p.label === "normal" ? "success" : "destructive"}
@@ -205,6 +203,9 @@ export default function PacketsPage() {
                       </TableCell>
                       <TableCell className={p.confidence > 0.9 ? "text-emerald-500 font-medium" : p.confidence > 0.7 ? "text-amber-500 font-medium" : "text-destructive font-medium"}>
                         {formatConfidence(p.confidence)}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate" title={p.message || ""}>
+                        {p.message || "—"}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-sm">
                         {formatDateTime(p.capturedAt)}
@@ -344,15 +345,6 @@ export default function PacketsPage() {
                       step="0.1"
                       value={injectData.duration} 
                       onChange={(e) => setInjectData({...injectData, duration: Number(e.target.value)})} 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="size">Size (bytes)</Label>
-                    <Input 
-                      id="size" 
-                      type="number"
-                      value={injectData.size} 
-                      onChange={(e) => setInjectData({...injectData, size: Number(e.target.value)})} 
                     />
                   </div>
                 </div>

@@ -2,7 +2,7 @@ import { AlertResponse, DashboardStatsResponse, PacketResponse, ReportResponse, 
 
 export const mockUser: User = {
   username: "admin_mock",
-  role: "USER",
+  role: "ADMIN",
 };
 
 export const mockDashboardStats: DashboardStatsResponse = {
@@ -55,23 +55,14 @@ export const mockAlerts: AlertResponse[] = Array.from({ length: 25 }).map((_, i)
   };
 });
 
-export const mockPackets: PacketResponse[] = Array.from({ length: 25 }).map((_, i) => {
-  const isAttack = i % 3 === 0;
-  const d = new Date();
-  d.setSeconds(d.getSeconds() - i * 5);
-
-  return {
-    id: 5000 - i,
-    sourceIp: `192.168.1.${10 + i}`,
-    destIp: `10.0.0.${i}`,
-    protocol: i % 2 === 0 ? "TCP" : "UDP",
-    size: Math.floor(Math.random() * 1500) + 40,
-    label: isAttack ? "attack" : "normal",
-    attackType: isAttack ? (i % 2 === 0 ? "DoS" : "Probe") : "normal",
-    confidence: isAttack ? 0.85 + Math.random() * 0.14 : 0.95 + Math.random() * 0.04,
-    capturedAt: d.toISOString(),
-  };
-});
+export const mockPackets: PacketResponse[] = [
+  { id: 1, srcIp: "192.168.1.100", dstIp: "10.0.0.5", srcPort: 443, dstPort: 80, duration: 0.1, land: 0, wrongFragment: 0, urgent: 0, protocol: "TCP", size: 1024, label: "normal", attackType: "", confidence: 0.95, capturedAt: "2026-06-03T10:00:00Z", isThreat: false, message: "Normal traffic detected" },
+  { id: 2, srcIp: "192.168.1.101", dstIp: "10.0.0.5", srcPort: 53, dstPort: 53, duration: 0.0, land: 0, wrongFragment: 0, urgent: 0, protocol: "UDP", size: 512, label: "attack", attackType: "DoS", confidence: 0.88, capturedAt: "2026-06-03T10:05:00Z", isThreat: true, message: "DoS attack detected with 88% confidence" },
+  { id: 3, srcIp: "10.0.0.5", dstIp: "192.168.1.102", srcPort: 80, dstPort: 443, duration: 0.5, land: 0, wrongFragment: 0, urgent: 0, protocol: "TCP", size: 2048, label: "normal", attackType: "", confidence: 0.99, capturedAt: "2026-06-03T10:10:00Z", isThreat: false, message: "Normal traffic detected" },
+  { id: 4, srcIp: "192.168.1.103", dstIp: "10.0.0.5", srcPort: 22, dstPort: 22, duration: 1.2, land: 0, wrongFragment: 0, urgent: 0, protocol: "TCP", size: 256, label: "attack", attackType: "Brute Force", confidence: 0.92, capturedAt: "2026-06-03T10:15:00Z", isThreat: true, message: "Brute Force attack detected with 92% confidence" },
+  { id: 5, srcIp: "192.168.1.104", dstIp: "10.0.0.5", srcPort: 8080, dstPort: 80, duration: 0.2, land: 0, wrongFragment: 0, urgent: 0, protocol: "TCP", size: 1500, label: "normal", attackType: "", confidence: 0.91, capturedAt: "2026-06-03T10:20:00Z", isThreat: false, message: "Normal traffic detected" },
+  { id: 6, srcIp: "192.168.1.42", dstIp: "10.0.0.33", srcPort: 33456, dstPort: 0, duration: 0.0, land: 0, wrongFragment: 0, urgent: 0, protocol: "ICMP", size: 84, label: "attack", attackType: "Probe", confidence: 0.6974, capturedAt: "2026-05-22T21:56:31", isThreat: true, message: "Probe attack detected with 70% confidence" },
+];
 
 export const mockReports: ReportResponse[] = [
   {
